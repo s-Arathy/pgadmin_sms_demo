@@ -202,22 +202,22 @@ function SMSRegisterView({mfaView}) {
           <input type='hidden' name={mfaView.auth_method} value='SETUP'/>
           <input type='hidden' name='validate' value='verify_code'/>
         </div>
-        <div>{mfaView.message}</div>
+        <div>{mfaView.description}</div>
         <InputText 
           id={`${uniqueId}_code`}
           value={inputCode} 
-          pattern="\d{6}" 
           type="password" 
           name="code" 
           placeholder={mfaView.otp_placeholder}
+          pattern="\d{6}"
           onChange={handleCodeChange}
           required 
+          data-test="code-input"
           autoComplete="one-time-code"
           maxLength="6"
-          data-test="code-input"
-          inputMode="numeric"
         />
         {error && <div style={{color: 'red', fontSize: '0.8em'}}>{error}</div>}
+        <div>{mfaView.message}</div>
       </div>
     );
   }
@@ -230,13 +230,40 @@ SMSRegisterView.propTypes = {
 };
 
 export default function MfaRegisterPage({actionUrl, mfaList, nextUrl, mfaView, ...props}) {
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
     // Only prevent submission if there's an error
     if (e.target.querySelector('[style*="color: red"]')) {
-      e.preventDefault();
       return false;
     }
-    return true;
+
+    const formData = new FormData(e.target);
+    
+    try {
+      const response = await fetch(actionUrl, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-pgA-CSRFToken': window.pgAdmin.csrf_token_header
+        }
+      });
+      
+      if (response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('text/html')) {
+          // Replace the current page content with the response HTML
+          const html = await response.text();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          document.documentElement.innerHTML = doc.documentElement.innerHTML;
+        }
+      } else {
+        console.error('Form submission failed:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
   };
 
   return (

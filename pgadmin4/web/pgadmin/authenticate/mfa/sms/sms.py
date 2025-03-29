@@ -135,6 +135,7 @@ def _mask_phone(_phone: str) -> str:
     """
     return '*' * (len(_phone) - 4) + _phone[-4:]
 
+@pgCSRFProtect.exempt
 def send_sms_code() -> Response:
     """
     Send the code to the user's phone number.
