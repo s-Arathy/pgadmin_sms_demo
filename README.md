@@ -42,7 +42,7 @@
 ### Validations:
 - **Phone Number Format Validation:**
   - Regex pattern: `^\+[1-9]\d{1,14}$`
-  - Implemented in `sms.py`, where `send_to` retrieves the phone number from the form submission.
+  - In `sms.py`, `send_to` is used to get the phone number from the form submission
 
 ---
 ## 4. Backend Implementation
